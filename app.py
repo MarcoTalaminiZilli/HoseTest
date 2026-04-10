@@ -24,6 +24,9 @@ class App:
             
         self.original_cv_img = cv2.resize(self.original_cv_img, (400, 300))
 
+        # Cria um buffer vazio (uma tela de pintura) com o exato mesmo tamanho e tipo
+        self.img_buffer = np.empty_like(self.original_cv_img)
+
         # Configuração da janela principal
         self.root = ctk.CTk()
         self.root.title("Calibrador HSV e Kernel")
@@ -185,11 +188,17 @@ class App:
         kernel_size = k_val if k_val % 2 != 0 else k_val + 1
 
         # 2. Processa a imagem usando a classe importada
-        _, img_processada = self.processor.pipeline(self.original_cv_img, lower_hsv, upper_hsv, kernel_size)
+        img_linha, img_processada = self.processor.pipeline(
+            self.original_cv_img, 
+            self.img_buffer, 
+            lower_hsv, 
+            upper_hsv, 
+            kernel_size
+            )
 
         # 3. Conversão para o formato moderno do CustomTkinter (CTkImage)
         # Original
-        img_rgb_orig = cv2.cvtColor(self.original_cv_img, cv2.COLOR_BGR2RGB)
+        img_rgb_orig = cv2.cvtColor(img_linha, cv2.COLOR_BGR2RGB)
         img_pil_orig = Image.fromarray(img_rgb_orig)
         img_ctk_orig = ctk.CTkImage(light_image=img_pil_orig, dark_image=img_pil_orig, size=(400, 300))
 

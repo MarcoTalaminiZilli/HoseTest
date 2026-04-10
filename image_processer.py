@@ -9,20 +9,21 @@ class ImageProcesser:
         pass
 
 
-    def pipeline(self, img, lower_hsv, upper_hsv, kernel_size):
-        hsv = self.hsv_conversion(img)
+    def pipeline(self, img, buffer_dest, lower_hsv, upper_hsv, kernel_size):
+        np.copyto(buffer_dest, img)  # Criamos uma cópia da imagem original para desenhar a linha sem alterar a original
+        hsv = self.hsv_conversion(buffer_dest)
         mascara = self.mask(hsv, lower_hsv, upper_hsv)
         mascara_limpa = self.closing(mascara, kernel_size)
         mascara_limpa = self.opening(mascara_limpa, kernel_size)
         p1, p2 = self.pointsFinder(mascara_limpa)
+        print(f"Ponto 1: {p1}, Ponto 2: {p2}")
 
         # Só tenta desenhar a linha se os pontos foram encontrados
         if p1 is not None and p2 is not None:
-            img_final = self.lineDrawer(img.copy(), p1, p2)
-        else:
-            img_final = img.copy() # Retorna a imagem sem a linha
-        return img_final, mascara_limpa
-
+            self.lineDrawer(buffer_dest, p1, p2)
+            
+        return buffer_dest, mascara_limpa
+        
     # Método pra ler a imagem original
     def leitura(self, filepath):
         img = cv2.imread(filepath)
@@ -75,5 +76,7 @@ class ImageProcesser:
 
     # Método para desenhar a linha de orientação na imagem original
     def lineDrawer(self, img, p1, p2):
+        cv2.circle(img, p1, 5, (0, 255, 0), -1)
+        cv2.circle(img, p2, 5, (0, 255, 0), -1)
         cv2.line(img, p1, p2, (255, 0, 0), 3)
         return img
